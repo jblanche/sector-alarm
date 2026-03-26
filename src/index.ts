@@ -2,15 +2,20 @@ export { SectorAlarm } from "./client.js";
 export {
   SectorAlarmAuthError,
   SectorAlarmApiError,
+  SectorAlarmConfigError,
 } from "./types.js";
 export type {
   SectorAlarmConfig,
   SectorAlarmError,
-  ApiResult,
+  Panel,
   PanelStatusResponse,
   TemperatureSensor,
   HumiditySensor,
   LockStatus,
   SmartPlugStatus,
-  DoorWindowSensor,
+  DoorsAndWindowsResponse,
+  DoorWindowFloor,
+  DoorWindowRoom,
+  DoorWindowDevice,
+  ChimeSettings,
 } from "./types.js";

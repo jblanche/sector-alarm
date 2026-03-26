@@ -7,10 +7,12 @@ import type {
   HumiditySensor,
   LockStatus,
   SmartPlugStatus,
-  DoorWindowSensor,
+  DoorsAndWindowsResponse,
+  Panel,
   ArmRequest,
   LockRequest,
 } from "./types.js";
+import { SectorAlarmConfigError } from "./types.js";
 
 const DEFAULT_BASE_URL = "https://mypagesapi.sectoralarm.net";
 
@@ -18,13 +20,32 @@ export class SectorAlarm {
   private readonly auth: AuthManager;
   private readonly baseUrl: string;
   private readonly panelId: string;
-  private readonly panelCode: string;
+  private readonly panelCode: string | undefined;
 
   constructor(config: SectorAlarmConfig) {
     this.baseUrl = config.baseUrl ?? DEFAULT_BASE_URL;
     this.panelId = config.panelId;
     this.panelCode = config.panelCode;
     this.auth = new AuthManager(this.baseUrl, config.email, config.password);
+  }
+
+  private requirePanelCode(): string {
+    if (!this.panelCode) {
+      throw new SectorAlarmConfigError(
+        "panelCode is required for this action. Provide it in the SectorAlarm constructor.",
+      );
+    }
+    return this.panelCode;
+  }
+
+  // --- Read-only endpoints ---
+
+  async getPanels(): Promise<Panel[]> {
+    return apiGet<Panel[]>(
+      this.auth,
+      this.baseUrl,
+      "/api/account/GetPanelList",
+    );
   }
 
   async getPanelStatus(): Promise<PanelStatusResponse> {
@@ -51,8 +72,8 @@ export class SectorAlarm {
     );
   }
 
-  async getDoorsAndWindows(): Promise<DoorWindowSensor[]> {
-    return apiPost<DoorWindowSensor[]>(
+  async getDoorsAndWindows(): Promise<DoorsAndWindowsResponse> {
+    return apiPost<DoorsAndWindowsResponse>(
       this.auth,
       this.baseUrl,
       "/api/housecheck/doorsandwindows",
@@ -76,53 +97,45 @@ export class SectorAlarm {
     );
   }
 
+  // --- Action endpoints (require panelCode) ---
+
   async arm(profileName?: string): Promise<unknown> {
-    const body: ArmRequest = {
-      PanelId: this.panelId,
-      PanelCode: this.panelCode,
-    };
-    if (profileName !== undefined) {
-      body.ProfileName = profileName;
-    }
+    const code = this.requirePanelCode();
+    const body: ArmRequest = { PanelId: this.panelId, PanelCode: code };
+    if (profileName !== undefined) body.ProfileName = profileName;
     return apiPost(this.auth, this.baseUrl, "/api/Panel/Arm", body);
   }
 
   async partialArm(profileName?: string): Promise<unknown> {
-    const body: ArmRequest = {
-      PanelId: this.panelId,
-      PanelCode: this.panelCode,
-    };
-    if (profileName !== undefined) {
-      body.ProfileName = profileName;
-    }
+    const code = this.requirePanelCode();
+    const body: ArmRequest = { PanelId: this.panelId, PanelCode: code };
+    if (profileName !== undefined) body.ProfileName = profileName;
     return apiPost(this.auth, this.baseUrl, "/api/Panel/PartialArm", body);
   }
 
   async disarm(profileName?: string): Promise<unknown> {
-    const body: ArmRequest = {
-      PanelId: this.panelId,
-      PanelCode: this.panelCode,
-    };
-    if (profileName !== undefined) {
-      body.ProfileName = profileName;
-    }
+    const code = this.requirePanelCode();
+    const body: ArmRequest = { PanelId: this.panelId, PanelCode: code };
+    if (profileName !== undefined) body.ProfileName = profileName;
     return apiPost(this.auth, this.baseUrl, "/api/Panel/Disarm", body);
   }
 
   async lock(lockSerial: string): Promise<unknown> {
+    const code = this.requirePanelCode();
     const body: LockRequest = {
       PanelId: this.panelId,
       LockSerial: lockSerial,
-      PanelCode: this.panelCode,
+      PanelCode: code,
     };
     return apiPost(this.auth, this.baseUrl, "/api/Panel/Lock", body);
   }
 
   async unlock(lockSerial: string): Promise<unknown> {
+    const code = this.requirePanelCode();
     const body: LockRequest = {
       PanelId: this.panelId,
       LockSerial: lockSerial,
-      PanelCode: this.panelCode,
+      PanelCode: code,
     };
     return apiPost(this.auth, this.baseUrl, "/api/Panel/Unlock", body);
   }
