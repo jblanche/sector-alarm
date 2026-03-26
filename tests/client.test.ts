@@ -309,13 +309,15 @@ describe("SectorAlarm client", () => {
 
     it("throws SectorAlarmApiError on 500 from data endpoint", async () => {
       const loginResp = mockResponse(200, { AuthorizationToken: VALID_TOKEN });
-      const serverErrorResp = mockResponse(500, { error: "Internal Server Error" });
+      const serverErrorResp = () => mockResponse(500, { error: "Internal Server Error" });
 
       vi.stubGlobal(
         "fetch",
         vi.fn()
           .mockResolvedValueOnce(loginResp)
-          .mockResolvedValueOnce(serverErrorResp),
+          .mockResolvedValueOnce(serverErrorResp())
+          .mockResolvedValueOnce(serverErrorResp())
+          .mockResolvedValueOnce(serverErrorResp()),
       );
 
       const client = new SectorAlarm(TEST_CONFIG);
@@ -334,13 +336,15 @@ describe("SectorAlarm client", () => {
 
     it("SectorAlarmApiError has correct status", async () => {
       const loginResp = mockResponse(200, { AuthorizationToken: VALID_TOKEN });
-      const errorResp = mockResponse(503, { error: "Service Unavailable" });
+      const errorResp = () => mockResponse(503, { error: "Service Unavailable" });
 
       vi.stubGlobal(
         "fetch",
         vi.fn()
           .mockResolvedValueOnce(loginResp)
-          .mockResolvedValueOnce(errorResp),
+          .mockResolvedValueOnce(errorResp())
+          .mockResolvedValueOnce(errorResp())
+          .mockResolvedValueOnce(errorResp()),
       );
 
       const client = new SectorAlarm(TEST_CONFIG);

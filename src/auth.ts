@@ -19,6 +19,7 @@ function decodeJwtPayload(token: string): JwtPayload {
 export class AuthManager {
   private token: string | null = null;
   private expiresAt = 0;
+  private loginPromise: Promise<string> | null = null;
   private readonly baseUrl: string;
   private readonly email: string;
   private readonly password: string;
@@ -33,7 +34,13 @@ export class AuthManager {
     if (this.token && Date.now() < this.expiresAt - 60_000) {
       return this.token;
     }
-    return this.login();
+    if (this.loginPromise) {
+      return this.loginPromise;
+    }
+    this.loginPromise = this.login().finally(() => {
+      this.loginPromise = null;
+    });
+    return this.loginPromise;
   }
 
   private async login(): Promise<string> {

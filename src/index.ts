@@ -1,4 +1,5 @@
 export { SectorAlarm } from "./client.js";
+export { withRetry } from "./endpoints.js";
 export {
   SectorAlarmAuthError,
   SectorAlarmApiError,
