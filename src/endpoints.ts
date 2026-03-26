@@ -55,5 +55,8 @@ async function handleResponse<T>(response: Response): Promise<T> {
     );
   }
 
-  return (await response.json()) as T;
+  // response.json() returns Promise<unknown> — we trust the API shape here.
+  // Callers are responsible for providing the correct generic type T.
+  const data: unknown = await response.json();
+  return data as T;
 }

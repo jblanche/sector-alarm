@@ -229,6 +229,24 @@ describe("SectorAlarm client", () => {
         }),
       );
     });
+
+    it("includes profile name when provided", async () => {
+      mockFetchForLogin(mockResponse(200, { status: "success" }));
+
+      const client = new SectorAlarm(TEST_CONFIG);
+      await client.disarm("Home");
+
+      expect(fetch).toHaveBeenLastCalledWith(
+        `${BASE_URL}/api/Panel/Disarm`,
+        expect.objectContaining({
+          body: JSON.stringify({
+            PanelId: TEST_CONFIG.panelId,
+            PanelCode: TEST_CONFIG.panelCode,
+            ProfileName: "Home",
+          }),
+        }),
+      );
+    });
   });
 
   describe("lock", () => {
